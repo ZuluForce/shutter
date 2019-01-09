@@ -21,7 +21,7 @@ class GPhoto(val config: ShutterAppConfig) {
     }
 
     private final var _camera: Camera? = null
-    private final val camera: Camera
+    final val camera: Camera
         get() = ifReadyOrNew()
 
     fun Camera.isReady() = isInitialized && !isClosed

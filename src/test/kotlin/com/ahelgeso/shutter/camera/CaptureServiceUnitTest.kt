@@ -3,12 +3,13 @@ package com.ahelgeso.shutter.camera
 import assertk.assert
 import assertk.assertions.contains
 import assertk.assertions.isNull
+import assertk.assertions.startsWith
+import com.ahelgeso.shutter.ShutterAppConfig
 import com.ahelgeso.shutter.gphoto.GPhoto
-import com.nhaarman.mockitokotlin2.any
-import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.whenever
+import com.nhaarman.mockitokotlin2.*
 import org.gphoto2.GPhotoException
 import org.junit.Test
+import java.nio.file.Path
 
 class CaptureServiceUnitTest {
 
@@ -25,12 +26,32 @@ class CaptureServiceUnitTest {
     }
 
     @Test
-    fun `takePhoto -- camera present with path returned from gphoto -- returns photo path`() {
+    fun `takePhoto -- config provided capture directory -- calls gphoto with path prefixed by capture directory`() {
         gphotoReturningNormally()
 
-        val capturedImagePath = captureService(photoDir).takePhoto()
+        captureService(photoDir).takePhoto()
 
-        assert(capturedImagePath.toString()).contains(photoDir)
+        argumentCaptor<Path>().apply {
+            verify(gphoto).capturePhotoToDisk(capture())
+
+            assert(firstValue.toString()).startsWith(photoDir)
+        }
+    }
+
+    @Test
+    fun `takePhoto -- config provided capture directory -- returns id suffix from call to gphoto`() {
+        gphotoReturningNormally()
+
+        val photoId = captureService(photoDir).takePhoto()
+
+        // This may seem like a strange assertion. The reason I care is that the photo id is central
+        // to later discovering and querying the photos so it's important to me that where we
+        // asked gphoto to save the photo matches what we give the caller back.
+        argumentCaptor<Path>().apply {
+            verify(gphoto).capturePhotoToDisk(capture())
+
+            assert(firstValue.toString()).contains(photoId.toString())
+        }
     }
 
     private fun gphotoThrowingExceptionOnCapture() {
@@ -42,10 +63,9 @@ class CaptureServiceUnitTest {
         // Nothing to mock
     }
 
-
     private fun captureService(photoDir: String): CaptureService {
-        val config = CaptureServiceConfig().apply {
-            this.photoDirectory = photoDir
+        val config = ShutterAppConfig().apply {
+            this.capture.photoDirectory = photoDir
         }
 
         return CaptureService(this.gphoto, config)

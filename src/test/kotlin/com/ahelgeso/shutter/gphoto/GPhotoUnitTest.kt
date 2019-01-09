@@ -5,10 +5,8 @@ import assertk.assertions.*
 import assertk.catch
 import com.ahelgeso.shutter.ArbitraryData
 import com.ahelgeso.shutter.ShutterAppConfig
-import com.nhaarman.mockitokotlin2.any
-import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.verify
-import com.nhaarman.mockitokotlin2.whenever
+import com.nhaarman.mockitokotlin2.*
+import org.assertj.core.api.Assertions.assertThat
 import org.gphoto2.Camera
 import org.gphoto2.CameraFile
 import org.gphoto2.CameraList
@@ -49,7 +47,7 @@ class GPhotoUnitTest {
         val thrown = catch { gphoto.camera }
 
         assert(thrown).isNotNull {
-            it.isInstanceOf(GPhotoException::class.java)
+            it.isInstanceOf(CameraUnavailableException::class.java)
         }
     }
 
@@ -60,7 +58,7 @@ class GPhotoUnitTest {
         val thrown = catch { gphoto.camera }
 
         assert(thrown).isNotNull {
-            it.isInstanceOf(GPhotoException::class.java)
+            it.isInstanceOf(CameraUnavailableException::class.java)
         }
     }
 
@@ -76,14 +74,15 @@ class GPhotoUnitTest {
 
     @Test
     fun `camera -- existing is not ready -- new camera created`() {
-        val (gphoto, originalCamera) = withCamera()
+        // Always return a new camera mock anytime we're asked to
+        val gphoto = withCamera(cameraFn = { mock() })
         // By calling the getter we get the field populated and ready for the next call
         // where the not ready status is detected. This is a design smell in my opinion but
         // I'm bound to how the native library is implemented.
-        assert(gphoto.camera).isEqualTo(originalCamera)
+        val originalCamera = gphoto.camera
         whenever(originalCamera.isClosed).thenReturn(true)
 
-        // This should see the original as no
+        // This should see the original as not ready and create a new one
         val newCamera = gphoto.camera
 
         assert(newCamera).isNotSameAs(originalCamera)
@@ -111,7 +110,7 @@ class GPhotoUnitTest {
         val thrown = catch { gphoto.capturePhotoToDisk(photoPath) }
 
         assert(thrown).isNotNull()
-        verify(cameraFile).clean()
+        verify(cameraFile, never()).clean()
     }
 
     @Test
@@ -154,11 +153,9 @@ class GPhotoUnitTest {
     /**
      * Return a camera in the CameraList and also if Camera is called.
      */
-    private fun withCamera(model: String = "Canon Test Model", port: String = "usb: 0,1"): Pair<GPhoto, Camera> {
-        val cameraList: CameraList = mock()
-        whenever(cameraList.count).thenReturn(1)
-        whenever(cameraList.getModel(0)).thenReturn(model)
-        whenever(cameraList.getPort(0)).thenReturn(port)
+    private fun withCamera(model: String = "Canon Test Model",
+                           port: String = "usb: 0,1"): Pair<GPhoto, Camera> {
+        val cameraList = cameraList(listOf(model), listOf(port))
         val camera: Camera = mock()
 
         val gphoto = testableGphoto(
@@ -166,6 +163,29 @@ class GPhotoUnitTest {
                 cameraListFn = { cameraList })
 
         return Pair(gphoto, camera)
+    }
+
+    private fun withCamera(cameraFn: () -> Camera,
+                           cameraListFn: (() -> CameraList)? = null): GPhoto =
+            testableGphoto(
+                    cameraFn = cameraFn,
+                    cameraListFn = cameraListFn ?: { cameraList() })
+
+    private fun cameraList(models: List<String> = listOf("Canon Test Model"),
+                           ports: List<String> = listOf("usb: 0,1")): CameraList {
+        assertThat(models).hasSameSizeAs(ports)
+        val cameraList: CameraList = mock()
+        whenever(cameraList.getPort(any())).thenAnswer {
+            val portIndex: Int = it.getArgument(0)
+            ports[portIndex]
+        }
+        whenever(cameraList.getModel(any())).thenAnswer {
+            val modelIndex: Int = it.getArgument(0)
+            models[modelIndex]
+        }
+        whenever(cameraList.count).thenReturn(models.size)
+
+        return cameraList
     }
 
     /**
@@ -190,7 +210,8 @@ class GPhotoUnitTest {
             cameraFn: () -> Camera = mock(),
             cameraListFn: () -> CameraList = mock()
     ) = object : GPhoto(ShutterAppConfig()) {
-        override fun nativeCamera(): Camera = cameraFn.invoke()
-        override fun nativeCameraList(): CameraList = cameraListFn.invoke()
+        override fun nativeCamera() = cameraFn.invoke()
+
+        override fun nativeCameraList() = cameraListFn.invoke()
     }
 }

@@ -45,12 +45,33 @@ sourceSets {
         }
     }
 
+    integrationTest {
+        kotlin {
+            compileClasspath += main.output + test.output
+            runtimeClasspath += main.output + test.output
+            srcDir 'src/integration-test/kotlin'
+        }
+	resources.srcDir file('src/integration-test/resources')
+    }
+
     systemTest {
         kotlin {
-            srcDir sourceSets.test.output
+            compileClasspath += main.output + test.output + integrationTest.output
+            runtimeClasspath += main.output + test.output + integrationTest.output
             srcDir 'src/system-test/kotlin'
         }
+	resources.srcDir file('src/system-test/resources')
     }
+}
+
+configurations {
+    integrationTestCompile.extendsFrom testCompile
+    integrationTestImplementation.extendsFrom testImplementation
+    integrationTestRuntime.extendsFrom testRuntime
+
+    systemTestCompile.extendsFrom integrationTestCompile
+    systemTestImplementation.extendsFrom integrationTestImplementation
+    systemTestRuntime.extendsFrom integrationTestRuntime
 }
 
 dependencies {
@@ -71,3 +92,21 @@ dependencies {
     testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:2.0.0"
     testCompile 'com.willowtreeapps.assertk:assertk-jvm:0.12'
 }
+
+task integrationTest(type: Test) {
+    testClassesDir = sourceSets.integrationTest.output.classesDir
+    classpath = sourceSets.integrationTest.runtimeClasspath
+    outputs.upToDateWhen { false }
+}
+
+task systemTest(type: Test) {
+    testClassesDir = sourceSets.systemTest.output.classesDir
+    classpath = sourceSets.systemTest.runtimeClasspath
+    outputs.upToDateWhen { false }
+}
+
+check.dependsOn integrationTest
+check.dependsOn systemTest
+// Run in order of increasing expense
+integrationTest.mustRunAfter test
+systemTest.mustRunAfter integrationTest
