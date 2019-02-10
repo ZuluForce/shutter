@@ -22,6 +22,7 @@ class GPhoto(val config: ShutterAppConfig) {
 
     private final var _camera: Camera? = null
     final val camera: Camera
+        @Synchronized
         get() = ifReadyOrNew()
 
     fun Camera.isReady() = isInitialized && !isClosed
@@ -31,6 +32,11 @@ class GPhoto(val config: ShutterAppConfig) {
      * resources and create a new newCamera.
      *
      * If a new newCamera is required and an error is received while initializing this will return a NoCamera instance.
+     *
+     * There's a simplifying assumption being made throughout this class that only one thread is ever trying to interact
+     * with the camera at once. This isn't a very fancy photo booth and the capture API is expected to be called by
+     * one frontend when in use. If you were to have multiple threads call this you could end up with two camera objects
+     * in memory and one of them getting CameraUtils.closeQuietly called on it.
      */
     private fun ifReadyOrNew(): Camera =
             try {
@@ -38,6 +44,7 @@ class GPhoto(val config: ShutterAppConfig) {
                     null -> this.newCamera()
                     true -> _camera
                     false -> {
+                        log.info("Camera became not ready. Attempting to create a new connection.")
                         CameraUtils.closeQuietly(_camera)
                         this.newCamera()
                     }
@@ -89,7 +96,7 @@ class GPhoto(val config: ShutterAppConfig) {
      * camera or in the subsequent request to download and save it.
      */
     @Synchronized
-    fun capturePhotoToDisk(photoPath: Path) = this.camera?.let {
+    fun capturePhotoToDisk(photoPath: Path) = this.camera.let {
         val cameraImage = it.captureImage()
 
         log.info("Saving captured image '$cameraImage' to $photoPath")
