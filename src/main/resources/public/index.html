@@ -1,6 +1,27 @@
-<title>Michelle & Andrew Wedding 2019 </title>
-<body>
-<p>
-    This is where the body of the photo booth should go.
-</p>
-</body>
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <link rel="stylesheet" href="/webjars/bootstrap/css/bootstrap.min.css" />
+
+        <title>Michelle & Andrew Wedding 2019 </title>
+
+        <script>
+            function takePhoto() {
+                $.get("camera/capture", result =>
+                    { console.log("Result of image capture: " + result) })
+            }
+        </script>
+    </head>
+    <body>
+        <div class="container">
+            <p>This is where the body of the photo booth should go.</p>
+            <button type="button" class="btn btn-large btn-outline-dark" onclick="takePhoto()">Take Photo!</button>
+        </div>
+        <script src="/webjars/jquery/jquery.min.js"></script>
+        <script src="/webjars/popper.js/popper.min.js"></script>
+        <script src="/webjars/bootstrap/js/bootstrap.min.js"></script>
+    </body>
+</html>

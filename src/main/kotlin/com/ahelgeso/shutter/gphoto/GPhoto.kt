@@ -53,7 +53,7 @@ class GPhoto(val config: ShutterAppConfig) {
                 _camera ?: throw AssertionError("parallel access to camera?")
             } catch (e: GPhotoException) {
                 // Usually thrown if we ask for the newCamera but it's not connected
-                log.warn("No newCamera or there's a problem: {}", e.message)
+                log.warn("No camera connected or there's a problem with it: {}", e.message)
                 throw CameraUnavailableException("Camera not ready", e)
             }
 
@@ -97,6 +97,8 @@ class GPhoto(val config: ShutterAppConfig) {
      */
     @Synchronized
     fun capturePhotoToDisk(photoPath: Path) = this.camera.let {
+        // This can throw a GPhotoException with the error code GP_ERROR_CAMERA_BUSY. We could capture this and
+        // retry. All real use cases right now don't have us calling this fast enough for this to matter
         val cameraImage = it.captureImage()
 
         log.info("Saving captured image '$cameraImage' to $photoPath")
@@ -107,7 +109,7 @@ class GPhoto(val config: ShutterAppConfig) {
             throw ge
         } finally {
             if (config.camera.cleanAfterSave) {
-                log.info("Cleaning new image off newCamera")
+                log.info("Cleaning new image off camera")
                 cameraImage.clean()
             }
         }

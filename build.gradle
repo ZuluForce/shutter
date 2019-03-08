@@ -1,7 +1,7 @@
 buildscript {
     ext {
         kotlinVersion = '1.2.71'
-        springBootVersion = '2.1.1.RELEASE'
+        springBootVersion = '2.1.2.RELEASE'
     }
     repositories {
         mavenCentral()
@@ -65,6 +65,9 @@ sourceSets {
 }
 
 configurations {
+    developmentOnly
+    runtimeClasspath.extendsFrom developmentOnly
+
     integrationTestCompile.extendsFrom testCompile
     integrationTestImplementation.extendsFrom testImplementation
     integrationTestRuntime.extendsFrom testRuntime
@@ -75,6 +78,9 @@ configurations {
 }
 
 dependencies {
+    // Mostly to avoid HTTP caching which makes it hard to iterate on web pages
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
     implementation('org.springframework.boot:spring-boot-starter-actuator')
     implementation('org.springframework.boot:spring-boot-starter-web')
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
@@ -86,6 +92,12 @@ dependencies {
     // Used by the gphoto2 bindings
     compile 'net.java.dev.jna:jna:4.2.2'
     compile 'org.apache.logging.log4j:log4j-core:2.11.1'
+
+    // For the web
+    compile 'org.webjars:webjars-locator:0.36'
+    compile 'org.webjars:bootstrap:4.2.1'
+    compile 'org.webjars:jquery:3.3.1-2'
+    compile 'org.webjars:popper.js:1.14.6'
 
     testCompile "org.jetbrains.kotlin:kotlin-test-junit"
     testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:2.0.0"
