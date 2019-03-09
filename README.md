@@ -24,6 +24,14 @@ GPhoto should support these basic things. Check compatibility here: http://www.g
 
 Use whatever method to connect the camera to the computer. Shutter does not care how the camera is connected. Those details are handled by GPhoto.
 
+### Run Tests
+
+```
+$ ./gradlew check --stacktrace
+```
+
+This will run all unit, integration, and system tests.
+
 ## Architecture
 
 Shutter is a web application entirely. You request a photo to be taken via API calls and you fetch the resulting images via the API. This choice was made to allow
