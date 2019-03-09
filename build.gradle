@@ -1,26 +1,19 @@
-buildscript {
-    ext {
-        kotlinVersion = '1.2.71'
-        springBootVersion = '2.1.2.RELEASE'
-    }
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlinVersion}")
-        classpath("org.jetbrains.kotlin:kotlin-allopen:${kotlinVersion}")
-    }
+plugins {
+    id("org.springframework.boot") version "2.1.3.RELEASE"
+    id("io.spring.dependency-management") version "1.0.6.RELEASE"
+
+    id("org.jetbrains.kotlin.jvm") version "1.3.21"
+    id("org.jetbrains.kotlin.plugin.spring") version "1.3.21"
 }
 
-apply plugin: 'kotlin'
-apply plugin: 'kotlin-spring'
-apply plugin: 'org.springframework.boot'
-apply plugin: 'io.spring.dependency-management'
+repositories {
+    mavenCentral()
+}
 
-group = 'com.ahelgeso'
-version = '0.0.1-SNAPSHOT'
+group = "com.ahelgeso"
+version = "0.0.1-SNAPSHOT"
 sourceCompatibility = 1.8
+
 compileKotlin {
     kotlinOptions {
         freeCompilerArgs = ["-Xjsr305=strict"]
@@ -34,85 +27,98 @@ compileTestKotlin {
     }
 }
 
-repositories {
-    mavenCentral()
-}
 
 sourceSets {
-    test {
+    testFramework {
         kotlin {
-            srcDir 'src/test/framework/kotlin'
+            compileClasspath += main.output
+            runtimeClasspath += main.runtimeClasspath
+            srcDir("test/framework/kotlin")
         }
     }
 
+    test {
+        kotlin {
+            compileClasspath += main.output + testFramework.output
+            runtimeClasspath += testFramework.runtimeClasspath
+
+            srcDir("test/unit/kotlin")
+        }
+    }
     integrationTest {
         kotlin {
-            compileClasspath += main.output + test.output
-            runtimeClasspath += main.output + test.output
-            srcDir 'src/integration-test/kotlin'
+            compileClasspath += main.output + testFramework.output
+            runtimeClasspath += testFramework.runtimeClasspath
+
+            srcDir("test/integration/kotlin")
         }
-	resources.srcDir file('src/integration-test/resources')
     }
 
     systemTest {
         kotlin {
-            compileClasspath += main.output + test.output + integrationTest.output
-            runtimeClasspath += main.output + test.output + integrationTest.output
-            srcDir 'src/system-test/kotlin'
+            compileClasspath += main.output + testFramework.output
+            runtimeClasspath += testFramework.output
+
+            srcDir("test/system/kotlin")
         }
-	resources.srcDir file('src/system-test/resources')
     }
 }
 
 configurations {
-    developmentOnly
-    runtimeClasspath.extendsFrom developmentOnly
+    // This may seem backwards. This dev only configuration is used to add the dev tools
+    // and spring automatically excludes that jar when building an uber jar.
+    runtimeOnly.extendsFrom developmentRuntimeOnly
 
-    integrationTestCompile.extendsFrom testCompile
-    integrationTestImplementation.extendsFrom testImplementation
-    integrationTestRuntime.extendsFrom testRuntime
+    testFrameworkImplementation.extendsFrom implementation
+    testFrameworkRuntimeOnly.extendsFrom runtimeOnly
+    testFramework.extendsFrom testFrameworkRuntimeClasspath
 
-    systemTestCompile.extendsFrom integrationTestCompile
-    systemTestImplementation.extendsFrom integrationTestImplementation
-    systemTestRuntime.extendsFrom integrationTestRuntime
+    testImplementation.extendsFrom testFrameworkImplementation
+    testRuntimeOnly.extendsFrom testFrameworkRuntimeOnly
+
+    integrationTestImplementation.extendsFrom testFrameworkImplementation
+    integrationTestRuntimeOnly.extendsFrom testFrameworkRuntimeOnly
+
+    systemTestImplementation.extendsFrom testFrameworkImplementation
+    systemTestRuntimeOnly.extendsFrom testFrameworkRuntimeOnly
 }
 
 dependencies {
     // Mostly to avoid HTTP caching which makes it hard to iterate on web pages
-    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    developmentRuntimeOnly("org.springframework.boot:spring-boot-devtools")
 
-    implementation('org.springframework.boot:spring-boot-starter-actuator')
-    implementation('org.springframework.boot:spring-boot-starter-web')
+    implementation("org.springframework.boot:spring-boot-starter-actuator")
+    implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
 
     // Not available on normal repos so it's being vendoring
     // See: https://github.com/mvysny/gphoto2-java
-    compile files('lib/gphoto2-java-1.5.jar')
+    implementation files("lib/gphoto2-java-1.5.jar")
     // Used by the gphoto2 bindings
-    compile 'net.java.dev.jna:jna:4.2.2'
-    compile 'org.apache.logging.log4j:log4j-core:2.11.1'
+    implementation("net.java.dev.jna:jna:4.2.2")
+    implementation("org.apache.logging.log4j:log4j-core:2.11.1")
 
     // For the web
-    compile 'org.webjars:webjars-locator:0.36'
-    compile 'org.webjars:bootstrap:4.2.1'
-    compile 'org.webjars:jquery:3.3.1-2'
-    compile 'org.webjars:popper.js:1.14.6'
+    implementation("org.webjars:webjars-locator:0.36")
+    implementation("org.webjars:bootstrap:4.2.1")
+    implementation("org.webjars:jquery:3.3.1-2")
+    implementation("org.webjars:popper.js:1.14.6")
 
-    testCompile "org.jetbrains.kotlin:kotlin-test-junit"
-    testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:2.0.0"
-    testImplementation('org.springframework.boot:spring-boot-starter-test')
-    testCompile 'com.willowtreeapps.assertk:assertk-jvm:0.12'
+    testFrameworkImplementation("org.jetbrains.kotlin:kotlin-test-junit")
+    testFrameworkImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.0.0")
+    testFrameworkImplementation("org.springframework.boot:spring-boot-starter-test")
+    testFrameworkImplementation("com.willowtreeapps.assertk:assertk-jvm:0.12")
 }
 
 task integrationTest(type: Test) {
-    testClassesDir = sourceSets.integrationTest.output.classesDir
+    testClassesDirs = sourceSets.integrationTest.output.classesDirs
     classpath = sourceSets.integrationTest.runtimeClasspath
     outputs.upToDateWhen { false }
 }
 
 task systemTest(type: Test) {
-    testClassesDir = sourceSets.systemTest.output.classesDir
+    testClassesDirs = sourceSets.systemTest.output.classesDirs
     classpath = sourceSets.systemTest.runtimeClasspath
     outputs.upToDateWhen { false }
 }
