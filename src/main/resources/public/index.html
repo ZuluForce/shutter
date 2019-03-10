@@ -1,27 +1,27 @@
-<!doctype html>
-<html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="utf-8">
+    <meta name="author" content="Andrew Helgeson">
+    <meta name="description" content="The party view for the photo booth. This is where the photos get taken">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-        <link rel="stylesheet" href="/webjars/bootstrap/css/bootstrap.min.css" />
+    <!-- <link rel="stylesheet" href="/webjars/bootstrap/css/bootstrap.min.css" media="screen"/> -->
+    <link rel="stylesheet" href="/css/theme.css" media="screen"/>
 
-        <title>Michelle & Andrew Wedding 2019 </title>
+    <title>Shutter Photo Booth</title>
+</head>
+<body>
+<div id="prompt">
+    <h1 id="prompt-msg">Take a Photo!</h1>
+    <button id="capture-btn" type="button" class="button capture">
+        <img id="capture-img" src="/images/camera_flat.png" alt="camera">
+    </button>
+</div>
 
-        <script>
-            function takePhoto() {
-                $.get("camera/capture", result =>
-                    { console.log("Result of image capture: " + result) })
-            }
-        </script>
-    </head>
-    <body>
-        <div class="container">
-            <p>This is where the body of the photo booth should go.</p>
-            <button type="button" class="btn btn-large btn-outline-dark" onclick="takePhoto()">Take Photo!</button>
-        </div>
-        <script src="/webjars/jquery/jquery.min.js"></script>
-        <script src="/webjars/popper.js/popper.min.js"></script>
-        <script src="/webjars/bootstrap/js/bootstrap.min.js"></script>
-    </body>
+<script type="text/javascript" src="/webjars/jquery/jquery.min.js"></script>
+<script type="text/javascript" src="/js/booth.js"></script>
+<!--<script src="/webjars/popper.js/popper.min.js"></script>-->
+<!--<script src="/webjars/bootstrap/js/bootstrap.min.js"></script>-->
+</body>
 </html>

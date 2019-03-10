@@ -67,7 +67,7 @@ sourceSets {
 configurations {
     // This may seem backwards. This dev only configuration is used to add the dev tools
     // and spring automatically excludes that jar when building an uber jar.
-    runtimeOnly.extendsFrom developmentRuntimeOnly
+    runtimeClasspath.extendsFrom developmentRuntimeClasspath
 
     testFrameworkImplementation.extendsFrom implementation
     testFrameworkRuntimeOnly.extendsFrom runtimeOnly
@@ -85,10 +85,12 @@ configurations {
 
 dependencies {
     // Mostly to avoid HTTP caching which makes it hard to iterate on web pages
-    developmentRuntimeOnly("org.springframework.boot:spring-boot-devtools")
+    developmentRuntimeClasspath("org.springframework.boot:spring-boot-devtools")
 
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-security")
+
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
 
@@ -121,6 +123,11 @@ task systemTest(type: Test) {
     testClassesDirs = sourceSets.systemTest.output.classesDirs
     classpath = sourceSets.systemTest.runtimeClasspath
     outputs.upToDateWhen { false }
+}
+
+bootRun {
+    args = ["--spring.profiles.active=dev"]
+//    "--spring.profiles.active=dev"
 }
 
 check.dependsOn integrationTest
