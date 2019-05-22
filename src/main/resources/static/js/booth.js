@@ -7,11 +7,14 @@ function captureSuccess(result) {
     hideCountdown();
     showResult();
 
-    var img = $('<img id="result-img">');
-    img.attr('src', "image/" + result.photoId);
-    img.appendTo("#result");
+    $("div#result")
+        .css("background-image", "url(image/" + result.photoId + ")");
 
-    setInterval(() => {
+//    var img = $('<img id="result-img">');
+//    img.attr('src', "image/" + result.photoId);
+//    img.appendTo("#result");
+
+    setTimeout(() => {
         hideResult()
         showPrompt()
     }, 10000)

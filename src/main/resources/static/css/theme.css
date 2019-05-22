@@ -1,5 +1,7 @@
 body {
     background-color: gray;
+    width: 100vh;
+    height: 100vh;
 }
 
 #prompt {
@@ -9,6 +11,13 @@ body {
 #result-img {
     width: 100%;
 }
+
+div#result {
+    height: calc(100vh - 40px);
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+
 
 h1 {
     font-size: 4em;
