@@ -2,22 +2,22 @@ function capture() {
     return $.get("camera/capture");
 }
 
+var previewTimer;
+
 function captureSuccess(result) {
     console.log("Successful capture: " + result.photoId);
+    $(".fa-laugh-wink").removeClass("hidden");
+    $(".fa-spinner").addClass("hidden");
     hideCountdown();
     showResult();
 
-    $("div#result")
+    $("#preview")
         .css("background-image", "url(image/" + result.photoId + ")");
 
-//    var img = $('<img id="result-img">');
-//    img.attr('src', "image/" + result.photoId);
-//    img.appendTo("#result");
-
-    setTimeout(() => {
+    previewTimer = setTimeout(() => {
         hideResult()
         showPrompt()
-    }, 10000)
+    }, 20000)
 }
 
 function captureFailed(result) {
@@ -31,16 +31,16 @@ var hideElement = (selector) => $(selector).addClass("hidden")
 var showElement = (selector) => $(selector).removeClass("hidden")
 
 
-var hidePrompt = () => hideElement("#prompt");
-var showPrompt = () => showElement("#prompt");
+var hidePrompt = () => hideElement("#capture");
+var showPrompt = () => showElement("#capture");
 
-var hideCountdown = () => hideElement("#countdown");
-var showCountdown = () => showElement("#countdown");
+var hideCountdown = () => hideElement("#counter");
+var showCountdown = () => showElement("#counter");
 
-var hideResult = () => hideElement("#result");
-var showResult = () => showElement("#result");
+var hideResult = () => hideElement("#preview");
+var showResult = () => showElement("#preview");
 
-var countdownValue = (val) => $("#countdown-number").text(val);
+var countdownValue = (val) => $("#number").text(val);
 function startCountdown() {
     hidePrompt();
     showCountdown();
@@ -56,7 +56,9 @@ function startCountdown() {
         if (countdown <= 0) {
             clearInterval(countdownTimer);
             // TODO: Setup spinner while we wait for the capture
-            countdownValue("");
+            countdownValue("Loading image...");
+            $(".fa-laugh-wink").addClass("hidden");
+            $(".fa-spinner").removeClass("hidden");
             capture()
                 .done(captureSuccess)
                 .fail(captureFailed);
@@ -64,4 +66,9 @@ function startCountdown() {
     }, 1000);
 }
 
-$("#capture-btn").click(startCountdown);
+$("#capture-button").click(startCountdown);
+$("#capture-another").click(() => {
+    window.clearTimeout(previewTimer);
+    hideResult();
+    showPrompt();
+})

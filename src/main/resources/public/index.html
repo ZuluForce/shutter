@@ -7,23 +7,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <!-- <link rel="stylesheet" href="/webjars/bootstrap/css/bootstrap.min.css" media="screen"/> -->
+    <link rel="stylesheet" href="/css/normalize.css" media="screen"/>
+    <link rel="stylesheet" href="/css/global.css" media="screen"/>
     <link rel="stylesheet" href="/css/theme.css" media="screen"/>
 
     <title>Shutter Photo Booth</title>
 </head>
 <body>
-<div id="prompt">
-    <h1 id="prompt-msg">Take a Photo!</h1>
-    <button id="capture-btn" type="button" class="button capture">
-        <img id="capture-img" src="/images/camera_flat.png" alt="camera">
-    </button>
-</div>
+<!--<div id="prompt">-->
+    <!--<h1 id="prompt-msg">Take a Photo!</h1>-->
+    <!--<button id="capture-btn" type="button" class="button capture">-->
+        <!--<img id="capture-img" src="/images/camera_flat.png" alt="camera">-->
+    <!--</button>-->
+<!--</div>-->
 
-<div id="countdown" class="hidden">
-    <h1 id="countdown-number"></h1>
-</div>
+<!--<div id="countdown" class="hidden">-->
+    <!--<h1 id="countdown-number"></h1>-->
+<!--</div>-->
 
-<div id="result" class="hidden"></div>
+<!--<div id="result" class="hidden"></div>-->
+
+<div id="wedding">
+    <div id="capture">
+    <span class="camera">
+      <i class="fas fa-fw fa-camera"></i>
+    </span>
+        <span id="capture-button" class="button">Capture</span>
+    </div>
+    <div id="counter" class="hidden">
+    <span class="smile">
+      <i class="far fa-fw fa-laugh-wink"></i>
+        <i class="fas fa-spinner fa-spin hidden"></i>
+    </span>
+        <span id="number">7</span>
+    </div>
+    <div id="preview" class="hidden">
+        <span id="capture-another" class="button">Capture</span>
+    </div>
+</div>
 
 <script type="text/javascript" src="/webjars/jquery/jquery.min.js"></script>
 <script type="text/javascript" src="/js/booth.js"></script>

@@ -6,6 +6,7 @@ import assertk.assertions.isNull
 import assertk.assertions.startsWith
 import com.ahelgeso.shutter.ShutterAppConfig
 import com.ahelgeso.shutter.gphoto.GPhoto
+import com.ahelgeso.shutter.image.ImageService
 import com.nhaarman.mockitokotlin2.*
 import org.gphoto2.GPhotoException
 import org.junit.Test
@@ -68,6 +69,8 @@ class CaptureServiceUnitTest {
             this.capture.photoDirectory = photoDir
         }
 
-        return CaptureService(this.gphoto, config)
+        val imgService: ImageService = mock()
+
+        return CaptureService(this.gphoto, imgService)
     }
 }
