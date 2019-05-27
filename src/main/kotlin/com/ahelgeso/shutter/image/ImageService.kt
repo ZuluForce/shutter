@@ -51,12 +51,20 @@ class ImageService(val config: ShutterAppConfig) {
                     .filter { it.isFile }
                     .filter { it.name.startsWith(photoPrefix) }
 
-    fun photoInfoFromId(photoId: Long): PhotoInfo {
-        val photoName = photoNameFromId(photoId)
-        val photoPath = photoPathFromName(photoName)
+    /**
+     * Get a PhotoInfo if the photo with the specified ID exists.
+     */
+    fun photoInfoFromIdIfExists(photoId: Long): PhotoInfo? = photoPathFromId(photoId)
+            .takeIf {
+                it.toFile().exists()
+            }?.let {
+                PhotoInfo(it, photoId)
+            }
 
-        return PhotoInfo(photoPath, photoName, photoId)
-    }
+    /**
+     * Get a PhotoInfo representing a photo with this ID, irrespective of its presence on disk.
+     */
+    fun photoInfoFromId(photoId: Long): PhotoInfo = PhotoInfo(photoPathFromId(photoId), photoId)
 
     /**
      * Generate an ID for the next photo we capture. This does not provision anything
@@ -70,13 +78,12 @@ class ImageService(val config: ShutterAppConfig) {
         return photoInfoFromId(photoId)
     }
 
-    private fun photoPathFromName(name: String) = Paths.get(config.capture.photoDirectory, name)
+    private fun photoPathFromId(photoId: Long): Path = Paths.get(config.capture.photoDirectory, photoNameFromId(photoId))
 
     private fun photoNameFromId(photoId: Long) = "${photoPrefix}_$photoId.${config.capture.photoExtension}"
 
     class PhotoInfo(val path: Path,
-                         val name: String,
-                         val id: Long) {
+                    val id: Long) {
         fun inputStream() = BufferedInputStream(FileInputStream(path.toFile()))
         fun length() = Files.size(path)
 

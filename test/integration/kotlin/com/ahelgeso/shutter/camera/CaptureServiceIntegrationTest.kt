@@ -1,14 +1,16 @@
 package com.ahelgeso.shutter.camera
 
-import assertk.catch
 import com.ahelgeso.shutter.ShutterAppConfig
-import com.ahelgeso.shutter.ShutterException
+import com.ahelgeso.shutter.gphoto.GPhoto
+import com.ahelgeso.shutter.image.ImageService
+import com.nhaarman.mockitokotlin2.argumentCaptor
 import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import java.nio.file.Files
+import java.nio.file.Path
 
 class CaptureServiceIntegrationTest {
 
@@ -16,42 +18,35 @@ class CaptureServiceIntegrationTest {
     @JvmField
     val tempFolder = TemporaryFolder()
 
-    @Test
-    fun `init -- capture directory is not directory -- throws exception`() {
-        val aFile = tempFolder.newFile()
-        val service = service(aFile.absolutePath)
-
-        val thrown = catch { service.init() }
-
-        assertThat(thrown)
-                .isInstanceOf(ShutterException::class.java)
-                .hasMessageContaining("not a directory")
-    }
+    val gphoto: GPhoto = mock()
 
     @Test
-    fun `init -- error making capture directory -- throws exception`() {
-        val baseFolder = tempFolder.newFolder()
-        val captureDir = baseFolder.resolve("capture").absolutePath
+    fun `takePhoto -- gphoto returning normally -- returns id of new image`() {
+        val outputDir = tempFolder.newFolder()
+        val imgService = imageService(outputDir.absolutePath)
+        val captureService = captureService(gphoto, imgService)
 
-        // Delete the parent directory so that when the service goes to create
-        // the directory it will get an error since it's not calling mkdirs. This
-        // seemed to be the most portable and reliable way to make the mkdir call
-        // fail.
-        Files.delete(baseFolder.toPath())
-        val service = service(captureDir)
+        val photoId = captureService.takePhoto()
 
-        val thrown = catch { service.init() }
+        assertThat(photoId).isNotNull()
 
-        assertThat(thrown)
-                .isInstanceOf(ShutterException::class.java)
-                .hasMessageContaining("Failed to create")
+        argumentCaptor<Path> {
+            verify(gphoto).capturePhotoToDisk(capture())
+
+            assertThat(firstValue.fileName.toString()).contains(photoId.toString())
+        }
     }
 
-    private fun service(photoDir: String): CaptureService {
+    private fun imageService(photoDir: String): ImageService {
         val config = ShutterAppConfig().apply {
             capture.photoDirectory = photoDir
         }
 
-        return CaptureService(mock(), config)
+        return ImageService(config)
+    }
+
+    private fun captureService(gphoto: GPhoto, imageService: ImageService): CaptureService {
+
+        return CaptureService(gphoto, imageService)
     }
 }
