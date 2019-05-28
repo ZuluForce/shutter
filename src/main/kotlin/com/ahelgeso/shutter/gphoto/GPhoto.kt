@@ -2,10 +2,7 @@ package com.ahelgeso.shutter.gphoto
 
 import com.ahelgeso.shutter.ShutterAppConfig
 import org.apache.logging.log4j.LogManager
-import org.gphoto2.Camera
-import org.gphoto2.CameraList
-import org.gphoto2.CameraUtils
-import org.gphoto2.GPhotoException
+import org.gphoto2.*
 import org.springframework.stereotype.Component
 import java.nio.file.Path
 import javax.annotation.PostConstruct
@@ -96,24 +93,43 @@ class GPhoto(val config: ShutterAppConfig) {
      * camera or in the subsequent request to download and save it.
      */
     @Synchronized
-    fun capturePhotoToDisk(photoPath: Path) = this.camera.let {
-        // This can throw a GPhotoException with the error code GP_ERROR_CAMERA_BUSY. We could capture this and
-        // retry. All real use cases right now don't have us calling this fast enough for this to matter
-        val cameraImage = it.captureImage()
+    fun capturePhotoToDisk(photoPath: Path) {
+        val cameraFile = actionAndCloseOnFailure(retryOnce = true) {
+            captureImage()
+        }
 
-        log.info("Saving captured image '$cameraImage' to $photoPath")
+        log.info("Saving captured image '$cameraFile' to $photoPath")
+
         try {
-            cameraImage.save(photoPath.normalize().toString())
-        } catch (ge: GPhotoException) {
-            log.warn("Problem while saving captured image", ge)
-            throw ge
+            cameraFile.save(photoPath.normalize().toString())
         } finally {
             if (config.camera.cleanAfterSave) {
                 log.info("Cleaning new image off camera")
-                cameraImage.clean()
+                cameraFile.clean()
             }
         }
     }
+
+    /**
+     * Do the specified action on a camera. If a GPhotoException is thrown this will
+     * close the camera. If retry is true, this will retry the operation once, throwing
+     * the second exception if it failed. The first exception's message will be logged
+     * without a stack trace.
+     */
+    private fun <T> actionAndCloseOnFailure(retryOnce: Boolean = false, action: Camera.() -> T): T =
+        try {
+            this.camera.let(action)
+        } catch (ge: GPhotoException) {
+            log.warn("Error when acting on camera. Closing camera connection. msg={}", ge.message)
+            CameraUtils.closeQuietly(this.camera)
+
+            if (retryOnce) {
+                log.warn("Retrying action once after failure")
+                actionAndCloseOnFailure(retryOnce=false, action=action)
+            } else {
+                throw ge
+            }
+        }
 
     private fun logCameras() {
         val cameraList = this.cameraList()

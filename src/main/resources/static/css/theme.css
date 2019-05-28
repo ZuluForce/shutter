@@ -50,6 +50,15 @@ body {
 	font-weight: 700;
 }
 
+#wedding #error-msg {
+	display: inline-block;
+	font-family: 'Crimson Text', serif;
+	font-size: 50px;
+	padding: 30px 40px 30px 40px;
+	color: #f4ecec;
+	font-weight: 700;
+}
+
 #wedding #capture,
 #wedding #counter {
 	height: 100vh;
@@ -60,7 +69,8 @@ body {
 	justify-content: center;
 }
 
-#wedding #preview {
+#wedding #preview,
+#wedding #error {
 	align-items: center;
 	background-position: center;
 	background-repeat: no-repeat;
@@ -73,12 +83,14 @@ body {
 }
 
 #wedding .camera,
-#wedding .smile {
+#wedding .smile,
+#wedding .exclamation {
 	padding: 50px;
 }
 
 #wedding .camera i,
-#wedding .smile i {
+#wedding .smile i,
+#wedding .exclamation i {
 	font-size: 6em;
 	color: #fff;
 	text-fill-color: transparent;

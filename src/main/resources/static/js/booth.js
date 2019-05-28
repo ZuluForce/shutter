@@ -23,8 +23,16 @@ function captureSuccess(result) {
 function captureFailed(result) {
     console.log("Failed capture: " + result);
     hideCountdown();
-    alert("Failed to capture image")
-    showPrompt();
+    showElement(".fa-laugh-wink")
+    hideElement(".fa-spinner")
+    showError()
+
+    $("#error-msg").text("Uh, Oh! This is all we could think to say. Ask someone official looking for help.")
+
+    setTimeout(() => {
+        hideError();
+        showPrompt();
+    }, 8000)
 }
 
 var hideElement = (selector) => $(selector).addClass("hidden")
@@ -39,6 +47,9 @@ var showCountdown = () => showElement("#counter");
 
 var hideResult = () => hideElement("#preview");
 var showResult = () => showElement("#preview");
+
+var hideError = () => hideElement("#error")
+var showError = () => showElement("#error")
 
 var countdownValue = (val) => $("#number").text(val);
 function startCountdown() {

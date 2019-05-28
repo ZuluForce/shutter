@@ -28,20 +28,26 @@
 <!--<div id="result" class="hidden"></div>-->
 
 <div id="wedding">
-    <div id="capture">
+    <div id="capture" class="booth-page">
     <span class="camera">
       <i class="fas fa-fw fa-camera"></i>
     </span>
         <span id="capture-button" class="button">Capture</span>
     </div>
-    <div id="counter" class="hidden">
+    <div id="counter" class="hidden booth-page">
     <span class="smile">
       <i class="far fa-fw fa-laugh-wink"></i>
         <i class="fas fa-spinner fa-spin hidden"></i>
     </span>
         <span id="number">7</span>
     </div>
-    <div id="preview" class="hidden">
+    <div id="error" class="hidden booth-page">
+        <span class="exclamation">
+            <i class="fas fa-exclamation"></i>
+        </span>
+        <p id="error-msg"></p>
+    </div>
+    <div id="preview" class="hidden booth-page">
         <span id="capture-another" class="button">Capture</span>
     </div>
 </div>
