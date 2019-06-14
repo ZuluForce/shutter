@@ -88,9 +88,7 @@ body {
 	padding: 50px;
 }
 
-#wedding .camera i,
-#wedding .smile i,
-#wedding .exclamation i {
+#wedding .std-icon i {
 	font-size: 6em;
 	color: #fff;
 	text-fill-color: transparent;
@@ -98,6 +96,10 @@ body {
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
 	background-clip: text;
+}
+
+.small-icon i {
+    font-size: 1em;
 }
 
 .hidden {
